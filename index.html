@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!-- HOW THIS FILE IS ORGANISED (top to bottom):
+     1. <style>  = how everything looks (colours, sizes, animations)
+     2. <body>   = what is on the page (picker, intro animation, sections)
+     3. <script> = what happens when someone clicks (sound, switching profiles, flipping the photo)
+     Change words in the BODY, change looks in the STYLE, change behaviour in the SCRIPT. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vignesh Suprith Busetty | Portfolio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23141414'/%3E%3Ctext x='32' y='47' font-size='42' font-weight='700' text-anchor='middle' fill='%23e50914' font-family='Arial'%3EV%3C/text%3E%3C/svg%3E">
+<meta property="og:title" content="Vignesh Suprith Busetty | Portfolio">
+<meta property="og:description" content="Computer student at Northumbria University London. Projects, research and experience.">
+<meta property="og:type" content="website">
+<meta name="description" content="MSc Computing and Technology student at Northumbria University London. Projects, experience and research.">
+<style>
+/* 1. COLOURS live here. Change a value once and it changes everywhere. */
+:root{--bg:#141414;--panel:#1f1f1f;--text:#f2f2f2;--muted:#a8a8a8;--red:#e50914;--line:#333}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:16px/1.6 "Segoe UI",Helvetica,Arial,sans-serif}
+a{color:inherit}
+:focus-visible{outline:2px solid #fff;outline-offset:3px}
+[hidden]{display:none!important}
+
+/* PROFILE PICKER ("Who's watching?") */
+#picker{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadein .8s}
+#picker h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:500;margin-bottom:2.2rem}
+.profiles{display:flex;flex-wrap:wrap;gap:1.6rem;justify-content:center}
+.profile{background:none;border:0;color:var(--muted);cursor:pointer;font:inherit;width:150px}
+.profile .label{display:block;margin-top:.9rem;font-size:1.1rem}
+.profile:hover,.profile:focus-visible{color:#fff}
+
+/* 3D CHARACTERS on the picker. Each is a cube built from 6 flat faces pushed out in 3D space. */
+.scene{position:relative;width:140px;height:140px;margin:36px auto 0;perspective:520px}
+.cube{position:absolute;left:10px;top:10px;width:120px;height:120px;transform-style:preserve-3d;transition:transform .15s ease-out}
+.f{position:absolute;inset:0;display:block;background:var(--c);border-radius:10px}
+.front{transform:translateZ(60px)}
+.back{transform:rotateY(180deg) translateZ(60px);filter:brightness(.6)}
+.left{transform:rotateY(-90deg) translateZ(60px);filter:brightness(.75)}
+.right{transform:rotateY(90deg) translateZ(60px);filter:brightness(.75)}
+.top{transform:rotateX(90deg) translateZ(60px);filter:brightness(1.25)}
+.bottom{transform:rotateX(-90deg) translateZ(60px);filter:brightness(.5)}
+.eyes{position:absolute;top:34px;left:0;right:0;display:flex;justify-content:center;gap:16px}
+.eyes s{width:28px;height:28px;background:#fff;border-radius:50%;display:grid;place-items:center;text-decoration:none;animation:blink 4.5s infinite}
+.eyes small{display:block;width:12px;height:12px;border-radius:50%;background:#111;transform:translate(var(--px,0),var(--py,0));transition:transform .1s}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.mouth{position:absolute;left:50%;bottom:28px;width:28px;height:5px;background:#1a1a1a;border-radius:4px;transform:translateX(-50%);transition:all .2s;display:block}
+.happy .mouth,.profile:focus-visible .mouth{width:50px;height:25px;background:#2b0707;border-radius:0 0 50px 50px;bottom:22px}
+.happy .scene,.profile:focus-visible .scene{animation:hop .45s ease-in-out infinite alternate}
+@keyframes hop{to{transform:translateY(-12px)}}
+.bubble{position:absolute;top:-34px;left:50%;transform:translateX(-50%) scale(.6);white-space:nowrap;background:#fff;color:#111;font-size:.85rem;font-weight:600;padding:.25rem .7rem;border-radius:99px;opacity:0;transition:.2s;pointer-events:none;display:block;quotes:none;z-index:2}
+.bubble::before,.bubble::after{content:none}
+.happy .bubble,.profile:focus-visible .bubble{opacity:1;transform:translateX(-50%) scale(1)}
+.profile.happy,.profile:focus-visible{color:#fff}
+/* a small accessory so each character looks different */
+[data-k=recruiter] .front::after{content:"";position:absolute;bottom:0;left:50%;width:16px;height:24px;background:#fff;transform:translateX(-50%);clip-path:polygon(0 0,100% 0,70% 100%,30% 100%)}
+[data-k=developer] .eyes{outline:3px solid #fff;border-radius:14px;margin:0 14px;padding:4px 0;top:30px}
+[data-k=me] .front::after{content:"\2605";position:absolute;top:4px;left:50%;transform:translateX(-50%);color:#ffd54a;font-size:22px}
+[data-k=guest] .front::after{content:"\1F44B";position:absolute;top:4px;right:6px;font-size:22px}
+.hint2{margin-top:2rem;color:var(--muted);font-size:.9rem}
+
+/* OPENING ANIMATION: a big red logo zooms in, then the site fades in */
+#intro{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center;overflow:hidden}
+/* red light streaks that flash behind the name */
+#intro::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 5vw,rgba(229,9,20,.2) 5vw 5.4vw);opacity:0;animation:streak 3.2s ease-in-out forwards}
+/* the name: letters burst out from the centre and stop, then the whole word rushes toward the viewer and fades into the screen */
+#intro b{position:relative;display:flex;color:var(--red);font-size:clamp(3rem,14vw,9.5rem);letter-spacing:.03em;animation:rush 3.2s ease-in forwards}
+#intro b span{opacity:0;text-shadow:0 0 40px rgba(229,9,20,.8);animation:spread 1s cubic-bezier(.2,.8,.2,1) .15s forwards}
+/* --d is how far each letter sits from the centre of the word (set on each letter in the HTML) */
+@keyframes spread{from{opacity:0;transform:translateX(calc(var(--d) * .62em)) scale(.3);filter:blur(10px)}35%{opacity:1}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes rush{0%,68%{transform:scale(1);opacity:1}100%{transform:scale(6);opacity:0;filter:blur(10px)}}
+@keyframes streak{0%{opacity:0;transform:scaleY(.2)}35%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scale(2.2)}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+#site{animation:fadein 1s}
+
+/* NAVIGATION BAR */
+nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center;padding:.9rem 5vw;background:rgba(20,20,20,.94);border-bottom:1px solid var(--line)}
+nav b{color:var(--red);font-size:1.3rem;margin-right:auto}
+nav a,nav button{color:var(--muted);font:inherit;font-size:.95rem;text-decoration:none;background:none;border:0;cursor:pointer}
+nav a:hover,nav button:hover{color:#fff}
+
+/* TOP BANNER (hero) */
+header{display:flex;flex-wrap:wrap;gap:2.5rem;align-items:center;justify-content:space-between;padding:9vh 5vw 7vh;background:radial-gradient(circle at 80% 30%,#5a0b10,#141414 62%)}
+.intro{flex:1 1 340px}
+h1.name{font-size:clamp(2.3rem,6.5vw,4.3rem);line-height:1.05;max-width:14ch}
+.intro p{max-width:52ch;margin:1.1rem 0 1.6rem;color:#ddd;font-size:1.1rem}
+.btn{display:inline-block;padding:.7rem 1.4rem;border-radius:4px;text-decoration:none;font-weight:600;margin:0 .6rem .6rem 0;border:0;font-size:1rem;cursor:pointer;color:#fff}
+.btn.red{background:var(--red)}.btn.grey{background:rgba(109,109,110,.7)}
+
+/* FLIP PHOTO: two faces stacked back to back, rotated 180 degrees on click */
+.flip{width:230px;height:290px;perspective:900px;background:none;border:0;cursor:pointer;color:var(--text);font:inherit;text-align:left}
+.flip-in{position:relative;width:100%;height:100%;transition:transform .7s;transform-style:preserve-3d}
+.flip.on .flip-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:8px;overflow:hidden}
+.front{background:var(--panel);display:grid;place-items:center;font-size:4rem;font-weight:700;color:var(--red)}
+.front img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.back{transform:rotateY(180deg);background:var(--panel);border:2px solid var(--red);padding:1.1rem;font-size:.9rem;line-height:1.5;display:flex;flex-direction:column;gap:.35rem}
+.back b{font-size:1.1rem}.back small{color:var(--muted)}
+.hint{font-size:.8rem;color:var(--muted);margin-top:.5rem;text-align:center}
+
+/* SECTIONS */
+main{display:flex;flex-direction:column}
+section{padding:3.5rem 5vw 0}
+h2{font-size:1.6rem;margin-bottom:1.1rem}
+.lead{max-width:70ch;color:#ddd;margin-bottom:.8rem}
+.row{display:flex;gap:1rem;overflow-x:auto;padding-bottom:1rem}
+.card{flex:0 0 min(300px,80vw);background:var(--panel);border-radius:6px;padding:1.3rem;border-top:3px solid var(--red);transition:transform .2s}
+.card:hover{transform:scale(1.03)}
+.card h3{font-size:1.1rem;margin-bottom:.5rem}.card p{color:var(--muted);font-size:.95rem}
+.card a{display:inline-block;margin-top:.8rem;color:var(--red);font-weight:600}
+.job{border-left:3px solid var(--red);padding:0 0 1.4rem 1.2rem;max-width:70ch}
+.job small{color:var(--muted)}.job ul{margin:.5rem 0 0 1.1rem;color:#ddd}
+.tags{display:flex;flex-wrap:wrap;gap:.6rem}
+.tags span{background:var(--panel);border:1px solid var(--line);padding:.4rem .9rem;border-radius:99px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
+.stats div{background:var(--panel);border-radius:6px;padding:1.2rem;text-align:center}
+.stats strong{display:block;font-size:2.2rem;color:var(--red)}
+.stats span{color:var(--muted);font-size:.9rem}
+details{background:var(--panel);border-radius:6px;padding:.9rem 1.2rem;margin-bottom:.7rem;max-width:70ch}
+summary{cursor:pointer;font-weight:600}
+details p{color:#ddd;margin-top:.6rem}
+.note{background:var(--panel);border:1px dashed var(--red);border-radius:6px;padding:1rem 1.3rem;max-width:70ch}
+.note li{margin-left:1.1rem}
+form{display:grid;gap:.8rem;max-width:520px}
+input,textarea{background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--text);font:inherit;padding:.7rem}
+footer{margin-top:4rem;padding:2rem 5vw;border-top:1px solid var(--line);color:var(--muted)}
+footer a{margin-right:1.2rem}
+
+/* EXTRA FEATURES */
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
+.chips em{font-style:normal;font-size:.75rem;border:1px solid var(--line);border-radius:3px;padding:.1rem .5rem;color:var(--muted)}
+#hire{display:none;order:0}
+.hire-box{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#3a0709,var(--panel));border:1px solid var(--red);border-radius:8px;padding:1.2rem 1.5rem}
+.hire-box h2{margin:0;font-size:1.3rem}.hire-box p{color:#ddd}
+.hire-box .btn{margin:0 .5rem 0 0}
+#top{position:fixed;right:1rem;bottom:1rem;z-index:6;background:var(--red);color:#fff;text-decoration:none;font-weight:600;padding:.6rem 1rem;border-radius:99px}
+.credit{margin-top:1.2rem;font-size:.9rem}
+@media(max-width:600px){nav{gap:.8rem;padding:.7rem 4vw}nav a{font-size:.85rem}nav b{width:100%}.flip{margin:0 auto}header{justify-content:center;text-align:center}.intro p{margin-left:auto;margin-right:auto}.hire-box{text-align:center;justify-content:center}}
+/* MORE FEATURES: scroll bar, typing line, copy button */
+#bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--red);z-index:30}
+.typed{margin:-.8rem 0 1.4rem!important;color:#fff!important;font-weight:600}
+.typed #typed{color:var(--red)}
+.caret{animation:fadein .6s infinite alternate;color:var(--red)}
+.card{will-change:transform}
+/* PER-PROFILE ORDER: the "order" number decides which section shows first */
+body[data-p=recruiter] #hire{display:block}body[data-p=recruiter] #experience{order:1}body[data-p=recruiter] #stats{order:2}body[data-p=recruiter] #education{order:3}body[data-p=recruiter] #projects{order:4}
+body[data-p=developer] #projects{order:1}body[data-p=developer] #skills{order:2}body[data-p=developer] #research{order:3}
+body[data-p=guest] #skills,body[data-p=guest] #experience,body[data-p=guest] #faq{display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+
+<!-- 2. BODY -->
+<!-- 2a. Who's watching? Each button has data-p = the profile name the script reads -->
+<div id="picker">
+  <h1>Who's watching?</h1>
+  <div class="profiles">
+    <button class="profile" data-p="recruiter"><div class="scene"><b class="cube" data-k="recruiter" style="--c:#0a6cff"><b class="f front"><u class="eyes"><s><small></small></s><s><small></small></s></u><em class="mouth"></em></b><b class="f back"></b><b class="f left"></b><b class="f right"></b><b class="f top"></b><b class="f bottom"></b></b><q class="bubble"></q></div><span class="label">Recruiter</span></button>
+    <button class="profile" data-p="developer"><div class="scene"><b class="cube" data-k="developer" style="--c:#1f9d55"><b class="f front"><u class="eyes"><s><small></small></s><s><small></small></s></u><em class="mouth"></em></b><b class="f back"></b><b class="f left"></b><b class="f right"></b><b class="f top"></b><b class="f bottom"></b></b><q class="bubble"></q></div><span class="label">Developer</span></button>
+    <button class="profile" data-p="me"><div class="scene"><b class="cube" data-k="me" style="--c:#e50914"><b class="f front"><u class="eyes"><s><small></small></s><s><small></small></s></u><em class="mouth"></em></b><b class="f back"></b><b class="f left"></b><b class="f right"></b><b class="f top"></b><b class="f bottom"></b></b><q class="bubble"></q></div><span class="label">Myself</span></button>
+    <button class="profile" data-p="guest"><div class="scene"><b class="cube" data-k="guest" style="--c:#f2a900"><b class="f front"><u class="eyes"><s><small></small></s><s><small></small></s></u><em class="mouth"></em></b><b class="f back"></b><b class="f left"></b><b class="f right"></b><b class="f top"></b><b class="f bottom"></b></b><q class="bubble"></q></div><span class="label">Guest</span></button>
+  </div>
+  <p class="hint2">Move your mouse near a character, or press 1, 2, 3 or 4</p>
+</div>
+
+<!-- 2b. Opening animation (hidden until a profile is clicked) -->
+<div id="intro" hidden><b><span style="--d:3">V</span><span style="--d:2">i</span><span style="--d:1">g</span><span style="--d:0">n</span><span style="--d:-1">e</span><span style="--d:-2">s</span><span style="--d:-3">h</span></b></div>
+
+<!-- 2c. The real site (hidden until the animation ends) -->
+<div id="site" hidden>
+<nav>
+  <b>Vignesh</b>
+  <a href="#about">About</a><a href="#projects">Projects</a><a href="#experience">Experience</a><a href="#skills">Skills</a><a href="#contact">Contact</a>
+  <button id="switch">Switch profile</button>
+</nav>
+
+<header>
+  <div class="intro">
+    <h1 class="name">Vignesh Suprith Busetty</h1>
+    <p id="tagline"></p>
+    <p class="typed">I am <span id="typed"></span><span class="caret">|</span></p>
+    <span id="actions"></span>
+  </div>
+  <div>
+    <button class="flip" id="flip" aria-label="Photo of Vignesh. Press to flip and see details">
+      <div class="flip-in">
+        <div class="face front">VB<img src="photo.jpg" alt="Vignesh Suprith Busetty" onerror="this.remove()"></div>
+        <div class="face back">
+          <b>Vignesh Suprith Busetty</b>
+          <small>MSc Computing and Technology, Northumbria University London</small>
+          <span>BTech CSE and IT, KL University (CGPA 8.68)</span>
+          <span>Skills: C, Python, SQL, HTML</span>
+          <span>Published researcher in speech emotion recognition</span>
+          <span>Retail Assistant, Sainsbury's</span>
+          <small>vigneshsuprithb@gmail.com</small>
+        </div>
+      </div>
+    </button>
+    <p class="hint">Tap the photo to flip it</p>
+  </div>
+</header>
+
+<main>
+<section id="me-note" hidden style="order:0">
+  <div class="note"><b>Owner view (only visible on the Myself profile)</b>
+    <ul><li>Add photo.jpg and resume.pdf next to index.html.</li><li>Replace the EDU Genie AI and paper links with the real ones.</li><li>Update Experience when your job or course changes.</li></ul>
+  </div>
+</section>
+
+<section id="hire">
+  <div class="hire-box">
+    <div><h2>Open to tech roles and internships</h2><p>Available now. Let's talk.</p></div>
+    <div><a class="btn red" href="resume.pdf">Resume</a><a class="btn grey" href="mailto:vigneshsuprithb@gmail.com">Email</a><a class="btn grey" href="https://linkedin.com/in/vignesh-suprith-busetty-68295a441">LinkedIn</a></div>
+  </div>
+</section>
+
+<section id="about">
+  <h2>About me</h2>
+  <p class="lead">I am a computer student at Northumbria University London, in the second year of my MSc in Computing and Technology. Before this I completed a BTech in Computer Science and Information Technology at KL University.</p>
+  <p class="lead">My strongest languages are C, Python and SQL. During my BTech I built a speech emotion recognition project and published a paper on it, and I built EDU Genie AI, a chatbot that helps with studying.</p>
+  <p class="lead">Alongside my studies I work at Sainsbury's, where I have learned to stay reliable and calm in a busy team. I am now looking for tech roles and internships where I can keep learning by building real things.</p>
+</section>
+
+<section id="journey">
+  <h2>My journey</h2>
+  <div class="row">
+    <div class="card"><h3>2020 to 2024</h3><p>BTech in Computer Science and Information Technology at KL University.</p></div>
+    <div class="card"><h3>Jan to Jun 2024</h3><p>Business development associate at Dhanvita Fintech, Hyderabad.</p></div>
+    <div class="card"><h3>2025</h3><p>Started my MSc in Computing and Technology at Northumbria University London.</p></div>
+    <div class="card"><h3>Jan 2026</h3><p>Joined Sainsbury's as a retail assistant, still going.</p></div>
+    <div class="card"><h3>Next</h3><p>A tech role or internship where I can build real things.</p></div>
+  </div>
+</section>
+
+<section id="stats">
+  <h2>At a glance</h2>
+  <div class="stats">
+    <div><strong>8.68</strong><span>BTech CGPA</span></div>
+    <div><strong>1</strong><span>published research paper</span></div>
+    <div><strong>4</strong><span>certifications earned</span></div>
+    <div><strong>~50</strong><span>clients signed in business development</span></div>
+    <div><strong>2</strong><span>MOUs signed</span></div>
+  </div>
+</section>
+
+<section id="projects">
+  <h2>Projects</h2>
+  <div class="row">
+    <!-- EDIT: put real repo or demo links here -->
+    <div class="card"><h3>EDU Genie AI</h3><p>A chatbot I built to help students study and revise.</p><div class="chips"><em>Chatbot</em><em>AI</em><em>Education</em></div><a href="https://github.com/vigneshSuprithB">View on GitHub</a></div>
+    <div class="card"><h3>Speech Emotion Recognition</h3><p>Published paper: "Efficient Speech Emotion Recognition for Resource-Constrained Devices".</p><div class="chips"><em>Research</em><em>Speech</em><em>Machine learning</em></div><a href="https://www.semanticscholar.org/search?q=Efficient%20Speech%20Emotion%20Recognition%20for%20Resource-Constrained%20Devices">Read the paper</a></div>
+    <div class="card"><h3>Forest Fire Detection</h3><p>A cloud-based system for detecting forest fires, built during my BTech.</p><div class="chips"><em>Cloud</em><em>BTech project</em></div></div>
+    <div class="card"><h3>Vehicle Rental System</h3><p>A vehicle rental management application, built during my BTech.</p><div class="chips"><em>Application</em><em>BTech project</em></div></div>
+    <div class="card"><h3>This portfolio</h3><p>A Netflix-style site with profile picker, flip photo and sound, built with HTML, CSS and JavaScript with help from Claude (Anthropic's AI).</p><div class="chips"><em>HTML</em><em>CSS</em><em>JavaScript</em></div></div>
+  </div>
+</section>
+
+<section id="research">
+  <h2>Research</h2>
+  <p class="lead">My paper, "Efficient Speech Emotion Recognition for Resource-Constrained Devices", is about recognising emotion from speech on devices with limited computing power, such as phones and small hardware. It is listed on Semantic Scholar.</p>
+</section>
+
+<section id="experience">
+  <h2>Experience</h2>
+  <div class="job"><h3>Retail Assistant, Sainsbury's</h3><small>January 2026 to present</small>
+    <ul><li>Trusted to work across tills, on-demand, replenishment, baler changes and ticket changes.</li><li>Became a responsible team member through consistent hard work.</li></ul></div>
+  <div class="job"><h3>Business Development Associate, Dhanvita Fintech Private Limited</h3><small>Hyderabad, January 2024 to June 2024</small>
+    <ul><li>Signed 2 MOUs and brought on around 50 clients.</li></ul></div>
+</section>
+
+<section id="education">
+  <h2>Education</h2>
+  <div class="job"><h3>MSc Computing and Technology with Advanced Practice</h3><small>Northumbria University, London campus, 2025 to present</small></div>
+  <div class="job"><h3>BTech Computer Science and Information Technology</h3><small>KL University, 2020 to 2024, CGPA 8.68</small></div>
+</section>
+
+<section id="skills">
+  <h2>Skills</h2>
+  <div class="tags"><span>C</span><span>Python</span><span>SQL</span><span>HTML</span><span>Git and GitHub</span><span>VS Code</span></div>
+  <h2 style="margin-top:2rem">Certifications earned during BTech</h2>
+  <div class="tags"><span>ServiceNow Certified System Administrator</span><span>AWS Cloud Practitioner</span><span>TensorFlow</span><span>Azure Developer (AZ-204)</span></div>
+</section>
+
+<section id="faq">
+  <h2>Quick answers</h2>
+  <details><summary>What kind of role are you looking for?</summary><p>Any tech role or internship where I can build and learn. I am especially interested in work that uses Python, SQL and AI.</p></details>
+  <details><summary>What have you built?</summary><p>A study chatbot called EDU Genie AI, a speech emotion recognition system with a published paper, a cloud-based forest fire detection system, a vehicle rental system, and this portfolio.</p></details>
+  <details><summary>Do you have work experience?</summary><p>Yes. I work as a retail assistant at Sainsbury's, and before that I was a business development associate at a fintech company. I have no tech work experience yet, which is why I am looking for an internship.</p></details>
+</section>
+</main>
+
+<a id="top" href="#" aria-label="Back to top">Top</a>
+
+<footer id="contact">
+  <h2 style="color:var(--text)">Contact</h2>
+  <p style="margin-bottom:1rem"><a href="mailto:vigneshsuprithb@gmail.com">vigneshsuprithb@gmail.com</a>
+  <a href="https://linkedin.com/in/vignesh-suprith-busetty-68295a441">LinkedIn</a>
+  <a href="https://github.com/vigneshSuprithB">GitHub</a></p>
+  <button class="btn grey" id="copy" type="button" style="margin-bottom:1rem">Copy my email</button>
+  <!-- This form simply opens the visitor's email app with the text filled in. No server needed. -->
+  <form id="mailform">
+    <input id="f-name" placeholder="Your name" required>
+    <textarea id="f-msg" rows="4" placeholder="Your message" required></textarea>
+    <button class="btn red" type="submit">Send by email</button>
+  </form>
+  <p class="credit">Designed and built by Vignesh, with help from Claude (Anthropic's AI).</p>
+</footer>
+</div>
+
+<!-- 3. SCRIPT -->
+<script>
+const $ = s => document.querySelector(s);   // shortcut: $("#id") finds one element
+
+// SOUND. Put your audio file next to this index.html and name it tadum.mp3.
+// (With a Vite/React project, put it in the "public" folder and use "/tadum.mp3" below.)
+const tadumAudio = new Audio("tadum.mp3");
+tadumAudio.preload = "auto";           // start loading now so there is no delay on click
+function tadum(){
+  tadumAudio.currentTime = 0;
+  tadumAudio.play().catch(() => {});   // if the file is missing, the page just stays silent
+}
+
+// TEXT for each profile
+const copy = {
+  recruiter:{tag:"Computer student doing an MSc in Computing and Technology at Northumbria University London, open to tech roles and internships. I bring a published research paper, hands-on projects, and customer-facing work experience.",
+    act:'<a class="btn red" href="resume.pdf">Download resume</a><a class="btn grey" href="mailto:vigneshsuprithb@gmail.com">Email me</a>'},
+  developer:{tag:"I build with Python, C and SQL. Browse my projects, read the speech emotion recognition paper, or check my code on GitHub.",
+    act:'<a class="btn red" href="https://github.com/vigneshSuprithB">GitHub</a><a class="btn grey" href="#projects">See projects</a>'},
+  me:{tag:"Welcome back, Vignesh. This is the owner view, so you can check what visitors see.",
+    act:'<a class="btn red" href="#me-note">My to-do list</a><a class="btn grey" href="#projects">Projects</a>'},
+  guest:{tag:"Hi, welcome. I'm a computer student in London who likes building useful things. Have a look around.",
+    act:'<a class="btn red" href="#projects">See what I built</a><a class="btn grey" href="#contact">Say hello</a>'}
+};
+
+// How long the opening animation runs (milliseconds). Keep it equal to the 3.2s in the CSS.
+const INTRO_MS = 3200;
+
+// 3D CHARACTERS: turn each cube toward the mouse, move the pupils, and make it happy when the mouse is close.
+const tiles = [...document.querySelectorAll(".profile")];
+const says = ["Open me!", "Open me, quickly!", "Click me, fast!", "Pick me!"];
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function setHappy(t, on){
+  if(on && !t.classList.contains("happy")) t.querySelector(".bubble").textContent = says[Math.floor(Math.random()*says.length)];
+  t.classList.toggle("happy", on);
+}
+function look(x, y){
+  tiles.forEach(t => {
+    const r = t.querySelector(".scene").getBoundingClientRect();
+    const dx = x - (r.left + r.width/2), dy = y - (r.top + r.height/2);
+    const nx = clamp(dx/300, -1, 1), ny = clamp(dy/300, -1, 1);
+    const cube = t.querySelector(".cube");
+    cube.style.transform = "rotateX(" + (-ny*28) + "deg) rotateY(" + (nx*35) + "deg)";
+    cube.style.setProperty("--px", nx*7 + "px"); cube.style.setProperty("--py", ny*7 + "px");
+    setHappy(t, Math.hypot(dx, dy) < 170);
+  });
+}
+if(!calm){
+  addEventListener("pointermove", e => { if(!$("#picker").hidden) look(e.clientX, e.clientY); });
+  document.addEventListener("mouseleave", () => tiles.forEach(t => { setHappy(t, false); t.querySelector(".cube").style.transform = ""; }));
+}
+// Phones have no mouse, so one random character calls out every few seconds instead.
+if(matchMedia("(hover: none)").matches){
+  setInterval(() => { if($("#picker").hidden) return; const pick = tiles[Math.floor(Math.random()*tiles.length)]; tiles.forEach(t => setHappy(t, t === pick)); }, 2600);
+}
+
+// SCROLL BAR: the red line at the top grows as you scroll down the page
+addEventListener("scroll", () => {
+  const h = document.documentElement;
+  $("#bar").style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight || 1) * 100) + "%";
+});
+
+// TYPING LINE: types a phrase, waits, deletes it, then types the next one
+const phrases = ["a computer student", "a published researcher", "a Python, C and SQL builder"];
+let pi = 0, ci = 0, del = false;
+function type(){
+  const word = phrases[pi];
+  $("#typed").textContent = word.slice(0, ci);
+  if(!del && ci === word.length){ del = true; return setTimeout(type, 1600); }
+  if(del && ci === 0){ del = false; pi = (pi + 1) % phrases.length; }
+  ci += del ? -1 : 1;
+  setTimeout(type, del ? 35 : 70);
+}
+if(calm){ $("#typed").textContent = phrases[0]; } else { type(); }
+
+// 3D TILT on project cards: the card leans toward the mouse
+document.querySelectorAll(".card").forEach(c => {
+  if(calm) return;
+  c.addEventListener("mousemove", e => {
+    const r = c.getBoundingClientRect(), x = (e.clientX - r.left)/r.width - .5, y = (e.clientY - r.top)/r.height - .5;
+    c.style.transform = "perspective(700px) rotateY(" + x*12 + "deg) rotateX(" + (-y*12) + "deg) scale(1.03)";
+  });
+  c.addEventListener("mouseleave", () => { c.style.transform = ""; });
+});
+
+// KEYBOARD: press 1, 2, 3 or 4 on the picker to choose a profile
+document.addEventListener("keydown", e => {
+  if(!$("#picker").hidden && "1234".includes(e.key) && e.key) tiles["1234".indexOf(e.key)].click();
+});
+
+// COPY EMAIL button
+$("#copy").addEventListener("click", async e => {
+  try{ await navigator.clipboard.writeText("vigneshsuprithb@gmail.com"); e.target.textContent = "Copied!"; }
+  catch(err){ e.target.textContent = "vigneshsuprithb@gmail.com"; }
+  setTimeout(() => e.target.textContent = "Copy my email", 2000);
+});
+
+// CLICKING A PROFILE: play sound, show the zoom animation, then reveal the site
+document.querySelectorAll(".profile").forEach(b => b.addEventListener("click", () => {
+  const p = b.dataset.p;
+  tadum();
+  document.body.dataset.p = p;
+  document.title = "Vignesh | " + {recruiter:"For recruiters",developer:"For developers",me:"Owner view",guest:"Welcome"}[p];                       // CSS reads this to reorder sections
+  $("#tagline").textContent = copy[p].tag;
+  $("#actions").innerHTML = copy[p].act;
+  $("#me-note").hidden = p !== "me";
+  $("#picker").hidden = true;
+  $("#intro").hidden = false;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(() => { $("#intro").hidden = true; $("#site").hidden = false; window.scrollTo(0,0); }, reduce ? 0 : INTRO_MS);
+}));
+
+$("#switch").addEventListener("click", () => { $("#site").hidden = true; $("#picker").hidden = false; delete document.body.dataset.p; });
+$("#flip").addEventListener("click", e => e.currentTarget.classList.toggle("on"));
+$("#mailform").addEventListener("submit", e => {
+  e.preventDefault();
+  location.href = "mailto:vigneshsuprithb@gmail.com?subject=" + encodeURIComponent("Message from " + $("#f-name").value) + "&body=" + encodeURIComponent($("#f-msg").value);
+});
+</script>
+</body>
+</html>
